@@ -2,6 +2,7 @@ package app
 
 import (
 	"teamBuild/messages/internal/delivery/http"
+	"teamBuild/messages/internal/service"
 	"teamBuilds/libs/env"
 	"teamBuilds/libs/logger"
 
@@ -14,7 +15,8 @@ func Run() {
 	env.LoadEnvFile()
 
 	// Server start
-	handler := http.NewHandler()
+	service := service.NewService()
+	handler := http.NewHandler(service)
 
 	httpServer := http.CreateHTTPServer("8080", handler.InitRoutes())
 

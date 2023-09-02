@@ -2,22 +2,27 @@ package http
 
 import (
 	v1 "teamBuild/messages/internal/delivery/http/v1"
+	"teamBuild/messages/internal/service"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
 type Handler struct {
+	service *service.Service
 }
 
-func NewHandler() *Handler {
-	return &Handler{}
+func NewHandler(service *service.Service) *Handler {
+	return &Handler{
+		service: service,
+	}
 }
 
 func (h *Handler) InitRoutes() *gin.Engine {
 	router := gin.New()
 
-	v1.SetRouter(router)
+	h.setCors(router)
+	v1.SetRouter(router, h.service)
 
 	return router
 }
