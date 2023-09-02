@@ -1,5 +1,7 @@
 package main
 
-func main() {
+import "teamBuild/messages/internal/app"
 
+func main() {
+	app.Run()
 }
