@@ -34,9 +34,9 @@ CREATE TABLE "messages" (
   "recipient_id" int NOT NULL,
   "message" varchar NOT NULL,
   "created_at" timestamp DEFAULT (now()),
-  "updated_at" datetime,
+  "updated_at" timestamp,
   FOREIGN KEY ( sendler_id ) references users(id),
-  FOREIGN KEY ( recipient_id ) references users(id),
+  FOREIGN KEY ( recipient_id ) references users(id)
 );
 -- +goose StatementEnd
 
