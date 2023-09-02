@@ -1,0 +1,32 @@
+version: '3.1'
+
+networks:
+  net:
+    driver: bridge
+
+services:
+# database
+  postgres_messages:
+    image: postgres:15.1
+    environment:
+      POSTGRES_DB: messages
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    container_name: 'postgres_messages'
+    volumes:
+      - ./db/messages:/var/lib/postgresql/data
+    ports:
+      - 5433:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d checkout"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 4G
