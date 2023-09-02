@@ -1,0 +1,3 @@
+migrate_up:
+	goose -dir ./migrations postgres "postgres://user:password@localhost:5433/checkout?sslmode=disable" status
+	goose -dir ./migrations postgres "postgres://user:password@localhost:5433/checkout?sslmode=disable" up
