@@ -21,8 +21,10 @@ func NewHandler(service *service.Service) *Handler {
 func (h *Handler) InitRoutes() *gin.Engine {
 	router := gin.New()
 
+	handlerV1 := v1.NewHandler(h.service)
+
 	h.setCors(router)
-	v1.SetRouter(router, h.service)
+	handlerV1.SetRouter(router)
 
 	return router
 }
