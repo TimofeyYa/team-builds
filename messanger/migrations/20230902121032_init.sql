@@ -3,8 +3,9 @@
 CREATE TABLE "users" (
     "id" BIGSERIAL PRIMARY KEY,
     "name" varchar NOT NULL,
+    "email" varchar NOT NULL,
     "password_hash" varchar NOT NULL,
-    "expires_at" timestamp NOT NULL,
+    "update_at" timestamp NOT NULL,
     "created_at" timestamp DEFAULT (now())
 );
 
@@ -33,6 +34,7 @@ CREATE TABLE "messages" (
   "sendler_id" int NOT NULL,
   "recipient_id" int NOT NULL,
   "message" varchar NOT NULL,
+  "is_read" boolean NOT NULL DEFAULT false,
   "created_at" timestamp DEFAULT (now()),
   "updated_at" timestamp,
   FOREIGN KEY ( sendler_id ) references users(id),

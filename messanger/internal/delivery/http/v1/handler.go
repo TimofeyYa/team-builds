@@ -5,6 +5,7 @@ import (
 	httpparcer "teamBuilds/libs/http_parcer"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gorilla/websocket"
 )
 
 type Handler struct {
@@ -23,7 +24,7 @@ func (h *Handler) SetRouter(router *gin.Engine) {
 		auth := v1.Group("/auth")
 		{
 			auth.POST("/login", httpparcer.Parce(h.Login))
-			auth.POST("/registration")
+			auth.POST("/registration", httpparcer.Parce(h.Registration))
 			auth.POST("/authorization")
 		}
 
@@ -45,7 +46,8 @@ func (h *Handler) SetRouter(router *gin.Engine) {
 			user.GET("/:user_id/chats")
 
 			// Web Socket Chanal for messages (only for user)
-			user.GET("/:user_id/chats/ws")
+			userData := map[int]*websocket.Conn{}
+			user.GET("/:user_id/chats/ws", CreateChatConnection(userData, h.MessageChanal))
 
 			// Get user chat with recipient  (only for user)
 			user.GET("/:user_id/chats/:recipient_id")
@@ -59,5 +61,11 @@ func (h *Handler) SetRouter(router *gin.Engine) {
 			// Update message for chat  (only for user)
 			user.PATCH("/:user_id/chats/:recipient_id/:message_id")
 		}
+	}
+}
+
+func CreateChatConnection(userData map[int]*websocket.Conn, f func(*gin.Context, map[int]*websocket.Conn)) func(*gin.Context) {
+	return func(c *gin.Context) {
+		f(c, userData)
 	}
 }

@@ -5,6 +5,9 @@ get_env:
 migrate_up:
 	goose -dir ./migrations postgres "postgres://$(DB_USER):$(DB_PASS)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable" status
 	goose -dir ./migrations postgres "postgres://$(DB_USER):$(DB_PASS)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable" up
+migrate_down:
+	goose -dir ./migrations postgres "postgres://$(DB_USER):$(DB_PASS)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable" status
+	goose -dir ./migrations postgres "postgres://$(DB_USER):$(DB_PASS)@$(DB_HOST):$(DB_PORT)/$(DB_NAME)?sslmode=disable" down
 
 run:
 	go run ./cmd/main.go
