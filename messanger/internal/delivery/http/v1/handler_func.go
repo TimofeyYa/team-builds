@@ -7,17 +7,25 @@ import (
 )
 
 type loginResponse struct {
-	Token  string `json:"token"`
-	Status bool   `json:"status"`
+	Token        string `json:"token"`
+	RefreshToken string `json:"refresh_token"`
+	Status       bool   `json:"status"`
 }
 
 func (h *Handler) Login(c context.Context, cred models.Credentials) (*loginResponse, *httpParcer.ErrorHTTP) {
-
-	return nil, nil
+	token, refreshToken, err := h.service.LoginUser(c, cred)
+	if err != nil {
+		return nil, err
+	}
+	return &loginResponse{
+		Token:        token,
+		RefreshToken: refreshToken,
+		Status:       true,
+	}, nil
 }
 
 type registrationResponse struct {
-	Data   models.User `json:"data"`
+	User   models.User `json:"user"`
 	Status bool        `json:"status"`
 }
 
@@ -28,7 +36,7 @@ func (h *Handler) Registration(c context.Context, regData models.RegistrationUse
 	}
 
 	return &registrationResponse{
-		Data:   *userData,
+		User:   *userData,
 		Status: true,
 	}, err
 }

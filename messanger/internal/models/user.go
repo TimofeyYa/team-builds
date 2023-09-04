@@ -5,12 +5,12 @@ import (
 )
 
 type User struct {
-	Id       int64      `db:"id"`
-	Name     string     `db:"name"`
-	Email    string     `db:"email"`
-	Password string     `db:"password_hash"`
-	UpdateAt *time.Time `db:"update_at"`
-	CreateAt time.Time  `db:"create_at"`
+	Id       int        `db:"id" json:"id"`
+	Name     string     `db:"name" json:"name"`
+	Email    string     `db:"email" json:"email"`
+	Password string     `db:"password_hash" json:"password_hash"`
+	UpdateAt *time.Time `db:"update_at" json:"update_at"`
+	CreateAt time.Time  `db:"create_at" json:"create_at"`
 }
 
 type RegistrationUser struct {

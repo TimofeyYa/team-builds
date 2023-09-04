@@ -21,14 +21,19 @@ func NewAuthService(repo *repository.Repository) *AuthService {
 	}
 }
 
-func (a *AuthService) LoginUser(c context.Context, cred models.Credentials) (string, *httpParcer.ErrorHTTP) {
-	return "", nil
+func (a *AuthService) LoginUser(c context.Context, cred models.Credentials) (string, string, *httpParcer.ErrorHTTP) {
+	cred.Password = a.generateHash(cred.Password)
+
+	return "", "", nil
 }
 
 func (a *AuthService) CreateUser(c context.Context, userData models.RegistrationUser) (*models.User, *httpParcer.ErrorHTTP) {
+	// TODO: Добавить валидацию имени, пароля и почты
 	userData.Password = a.generateHash(userData.Password)
 
 	data, err := a.repo.Store.CreateUser(c, userData)
+
+	// TODO: Добавить проверку ошибок и в зависимости от типа ошибки выдавать код
 	if err != nil {
 		return nil, &httpParcer.ErrorHTTP{
 			Msg:  err.Error(),

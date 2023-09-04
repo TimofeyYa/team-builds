@@ -64,3 +64,8 @@ func (s *StoreRepository) CreateUser(c context.Context, userData models.Registra
 
 	return &newUserData, nil
 }
+
+func (s *StoreRepository) LoginUser(context.Context, models.Credentials) (int, error) { // Вернём id пользователя
+
+	return 0, nil
+}
