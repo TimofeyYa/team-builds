@@ -9,7 +9,7 @@ import (
 
 type ErrorHTTP struct {
 	Msg  string
-	Code int8
+	Code uint16
 }
 
 func (e *ErrorHTTP) Error() string {

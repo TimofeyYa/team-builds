@@ -17,12 +17,16 @@ func (h *Handler) Login(c context.Context, cred models.Credentials) (*loginRespo
 }
 
 type registrationResponse struct {
-	Data   models.User
-	Status bool `json:"status"`
+	Data   models.User `json:"data"`
+	Status bool        `json:"status"`
 }
 
 func (h *Handler) Registration(c context.Context, regData models.RegistrationUser) (*registrationResponse, *httpParcer.ErrorHTTP) {
-	userData, err := h.service.CreateUser(regData)
+	userData, err := h.service.CreateUser(c, regData)
+	if err != nil {
+		return nil, err
+	}
+
 	return &registrationResponse{
 		Data:   *userData,
 		Status: true,

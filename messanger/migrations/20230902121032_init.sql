@@ -5,9 +5,10 @@ CREATE TABLE "users" (
     "name" varchar NOT NULL,
     "email" varchar NOT NULL,
     "password_hash" varchar NOT NULL,
-    "update_at" timestamp NOT NULL,
+    "update_at" timestamp,
     "created_at" timestamp DEFAULT (now())
 );
+CREATE UNIQUE INDEX users_item ON users(email);
 
 CREATE TABLE "sessions" (
     "id" BIGSERIAL PRIMARY KEY,
