@@ -46,8 +46,7 @@ func (h *Handler) SetRouter(router *gin.Engine) {
 			user.GET("/:user_id/chats")
 
 			// Web Socket Chanal for messages (only for user)
-			userData := map[int]*websocket.Conn{}
-			user.GET("/:user_id/chats/ws", CreateChatConnection(userData, h.MessageChanal))
+			user.GET("/:user_id/chats/ws", CreateChatConnection(h.MessageChanal))
 
 			// Get user chat with recipient  (only for user)
 			user.GET("/:user_id/chats/:recipient_id")
@@ -64,7 +63,8 @@ func (h *Handler) SetRouter(router *gin.Engine) {
 	}
 }
 
-func CreateChatConnection(userData map[int]*websocket.Conn, f func(*gin.Context, map[int]*websocket.Conn)) func(*gin.Context) {
+func CreateChatConnection(f func(*gin.Context, map[int]*websocket.Conn)) func(*gin.Context) {
+	userData := map[int]*websocket.Conn{}
 	return func(c *gin.Context) {
 		f(c, userData)
 	}

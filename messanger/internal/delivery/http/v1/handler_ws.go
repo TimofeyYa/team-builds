@@ -4,9 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"sync"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
 )
 
 var wsupgrader = websocket.Upgrader{
@@ -19,18 +21,26 @@ type userMessage struct {
 	RecipientId int    `json:"recipient_id"`
 }
 
+var mu sync.Mutex // Объявляет мьютекс
+
 func wshandler(w http.ResponseWriter, r *http.Request, userId int, userData map[int]*websocket.Conn) {
 	conn, err := wsupgrader.Upgrade(w, r, nil)
 	if err != nil {
-		fmt.Println("Failed to set websocket upgrade: %+v", err)
+		logrus.Warnf("Failed to set websocket upgrade: %+v\n", err)
 		return
 	}
+
+	mu.Lock()
 	userData[userId] = conn
-	fmt.Println(userData)
+	mu.Unlock()
+
 	for {
 		t, msg, err := conn.ReadMessage()
 		if err != nil {
+			mu.Lock()
 			delete(userData, userId)
+			fmt.Println(userData)
+			mu.Unlock()
 			break
 		}
 
@@ -40,11 +50,13 @@ func wshandler(w http.ResponseWriter, r *http.Request, userId int, userData map[
 			continue
 		}
 
+		mu.Lock()
 		if userData[userMsg.RecipientId] != nil {
 			userData[userMsg.RecipientId].WriteMessage(t, msg)
 		}
-		conn.WriteMessage(t, msg)
+		mu.Unlock()
 	}
+	conn.Close()
 }
 
 type messageRequest struct {
