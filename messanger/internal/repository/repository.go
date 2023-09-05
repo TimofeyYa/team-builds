@@ -11,6 +11,7 @@ import (
 type Store interface {
 	CreateUser(context.Context, models.RegistrationUser) (*models.User, error)
 	LoginUser(context.Context, models.Credentials) (int, error)
+	SaveRefreshToken(context.Context, int, string) error
 }
 
 type Repository struct {

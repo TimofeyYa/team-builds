@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"teamBuild/messages/internal/models"
+	"time"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v4"
@@ -65,7 +66,46 @@ func (s *StoreRepository) CreateUser(c context.Context, userData models.Registra
 	return &newUserData, nil
 }
 
-func (s *StoreRepository) LoginUser(context.Context, models.Credentials) (int, error) { // Вернём id пользователя
+func (s *StoreRepository) LoginUser(c context.Context, cred models.Credentials) (int, error) { // Вернём id пользователя
+	sqlReq, args, err := psql.Select("id").
+		From("users").
+		Where(sq.And{
+			sq.Eq{
+				"email": cred.Email,
+			},
+			sq.Eq{
+				"password_hash": cred.Password,
+			},
+		}).ToSql()
 
-	return 0, nil
+	if err != nil {
+		logrus.Error(err.Error())
+		return 0, fmt.Errorf("error build query: %s", err.Error())
+	}
+
+	var userId int
+	if err := s.pool.QueryRow(c, sqlReq, args...).Scan(&userId); err != nil {
+		logrus.Error(err.Error())
+		return 0, fmt.Errorf("error login: %s", err.Error())
+	}
+
+	return userId, nil
+}
+
+func (s *StoreRepository) SaveRefreshToken(c context.Context, userId int, refreshToken string) error {
+	sqlReq, args, err := psql.Insert("sessions").
+		Columns("user_id", "refresh_token", "expires_at", "created_at").
+		Values(userId, refreshToken, time.Now().Add(48*time.Hour), time.Now()).ToSql()
+	if err != nil {
+		logrus.Error(err.Error())
+		return fmt.Errorf("error build query: %s", err.Error())
+	}
+
+	_, err = s.pool.Exec(c, sqlReq, args...)
+	if err != nil {
+		logrus.Error(err.Error())
+		return fmt.Errorf("error exec query: %s", err.Error())
+	}
+
+	return nil
 }

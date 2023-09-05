@@ -14,7 +14,6 @@ CREATE TABLE "sessions" (
     "id" BIGSERIAL PRIMARY KEY,
     "user_id" int NOT NULL,
     "refresh_token" varchar NOT NULL,
-    "fingerprint" varchar NOT NULL,
     "expires_at" timestamp NOT NULL,
     "created_at" timestamp DEFAULT (now()),
     FOREIGN KEY ( user_id ) references users(id)
