@@ -5,7 +5,6 @@ import (
 	"crypto/sha1"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"os"
 	"teamBuild/messages/internal/models"
 	"teamBuild/messages/internal/repository"
@@ -82,9 +81,10 @@ func (a *AuthService) CreateUser(c context.Context, userData models.Registration
 
 func (a *AuthService) Authorization(c context.Context, tokens *models.TokenPair) (*models.TokenPair, *httpParcer.ErrorHTTP) {
 	tokenContent, err := a.parseJWT(tokens.JWT)
+
 	// TODO: Мы должны различать, когда токен не валидный из за времени, а когда из за структуры к ключа
 	// Если токен не валиден из за времени, то мы заменяем его рефрешем, если из за ключа - отказываем в доступе
-	if err != nil {
+	if (err != nil && !errors.Is(err, jwt.ErrTokenExpired)) || errors.Is(err, jwt.ErrSignatureInvalid) {
 		return nil, &httpParcer.ErrorHTTP{
 			Msg:  err.Error(),
 			Code: 403,
@@ -137,7 +137,6 @@ func (a *AuthService) createJWT(userId int) (string, error) {
 }
 
 func (a *AuthService) parseJWT(accessToken string) (*JWTContent, error) {
-	fmt.Println(accessToken)
 	token, err := jwt.ParseWithClaims(accessToken, &JWTContent{}, func(t *jwt.Token) (interface{}, error) {
 		if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("invalid signing method")
@@ -146,7 +145,7 @@ func (a *AuthService) parseJWT(accessToken string) (*JWTContent, error) {
 		return []byte(a.secretKey), nil
 	})
 
-	if err != nil {
+	if (err != nil && !errors.Is(err, jwt.ErrTokenExpired)) || errors.Is(err, jwt.ErrSignatureInvalid) {
 		return nil, err
 	}
 
