@@ -25,7 +25,7 @@ func (h *Handler) SetRouter(router *gin.Engine) {
 		{
 			auth.POST("/login", httpparcer.Parce(h.Login))
 			auth.POST("/registration", httpparcer.Parce(h.Registration))
-			auth.POST("/authorization")
+			auth.POST("/authorization", h.Authorization)
 		}
 
 		user := v1.Group("/user")
@@ -68,4 +68,11 @@ func CreateChatConnection(f func(*gin.Context, map[int]*websocket.Conn)) func(*g
 	return func(c *gin.Context) {
 		f(c, userData)
 	}
+}
+
+func (h *Handler) errorResponse(c *gin.Context, code uint16, errMsg string) {
+	c.AbortWithStatusJSON(int(code), gin.H{
+		"status": false,
+		"error":  errMsg,
+	})
 }

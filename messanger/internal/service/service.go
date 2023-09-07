@@ -10,6 +10,7 @@ import (
 type Auth interface {
 	LoginUser(context.Context, models.Credentials) (string, string, *httpParcer.ErrorHTTP)
 	CreateUser(context.Context, models.RegistrationUser) (*models.User, *httpParcer.ErrorHTTP)
+	Authorization(c context.Context, tokens *models.TokenPair) (*models.TokenPair, *httpParcer.ErrorHTTP)
 }
 
 type User interface {

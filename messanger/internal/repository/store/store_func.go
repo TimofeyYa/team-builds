@@ -14,6 +14,15 @@ import (
 var psql = sq.StatementBuilder.PlaceholderFormat(sq.Dollar)
 
 func (s *StoreRepository) CreateUser(c context.Context, userData models.RegistrationUser) (*models.User, error) {
+	tx, err := s.pool.BeginTx(c, pgx.TxOptions{
+		IsoLevel: pgx.ReadCommitted,
+	})
+	if err != nil {
+		logrus.Error(err.Error())
+		return nil, err
+	}
+	defer s.rollBackTx(tx, c)
+
 	sqlReq, args, err := psql.Insert("users").
 		Columns("name", "email", "password_hash").
 		Values(userData.Name, userData.Email, userData.Password).
@@ -24,14 +33,6 @@ func (s *StoreRepository) CreateUser(c context.Context, userData models.Registra
 		return nil, fmt.Errorf("error build query: %s", err.Error())
 	}
 
-	tx, err := s.pool.BeginTx(c, pgx.TxOptions{
-		IsoLevel: pgx.ReadCommitted,
-	})
-	if err != nil {
-		logrus.Error(err.Error())
-		return nil, err
-	}
-	defer s.rollBackTx(tx, c)
 	var userId int
 	if err := tx.QueryRow(c, sqlReq, args...).Scan(&userId); err != nil {
 		return nil, fmt.Errorf("error query: %s", err.Error())
@@ -105,6 +106,46 @@ func (s *StoreRepository) SaveRefreshToken(c context.Context, userId int, refres
 	if err != nil {
 		logrus.Error(err.Error())
 		return fmt.Errorf("error exec query: %s", err.Error())
+	}
+
+	return nil
+}
+
+func (s *StoreRepository) UpdateRefreshToken(c context.Context, userId int, oldRefresh string, newRefresh string) error {
+	tx, err := s.pool.BeginTx(c, pgx.TxOptions{
+		IsoLevel: pgx.ReadCommitted,
+	})
+	if err != nil {
+		logrus.Error(err.Error())
+		return err
+	}
+	defer s.rollBackTx(tx, c)
+
+	sqlReq, args, err := psql.Update("sessions").
+		Set("refresh_token", newRefresh).
+		Set("expires_at", time.Now().Add(48*time.Hour)).
+		Where(sq.And{
+			sq.Eq{
+				"refresh_token": oldRefresh,
+				"user_id":       userId,
+			},
+			sq.Gt{
+				"expires_at": time.Now(),
+			},
+		}).ToSql()
+	if err != nil {
+		logrus.Error(err.Error())
+		return fmt.Errorf("error build query: %s", err.Error())
+	}
+
+	result, err := s.pool.Exec(c, sqlReq, args...)
+	if err != nil {
+		logrus.Error(err.Error())
+		return err
+	}
+
+	if result.RowsAffected() != 1 {
+		return fmt.Errorf("refresh token in not valid")
 	}
 
 	return nil

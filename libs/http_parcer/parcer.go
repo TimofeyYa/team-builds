@@ -1,7 +1,6 @@
 package httpparcer
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/gin-gonic/gin"
@@ -16,7 +15,7 @@ func (e *ErrorHTTP) Error() string {
 	return fmt.Sprintf("%s: code %d", e.Msg, e.Code)
 }
 
-func Parce[reqData any, resData any](f func(c context.Context, body reqData) (*resData, *ErrorHTTP)) func(*gin.Context) {
+func Parce[reqData any, resData any](f func(c *gin.Context, body reqData) (*resData, *ErrorHTTP)) func(*gin.Context) {
 	return func(c *gin.Context) {
 		var body reqData
 		if err := c.ShouldBindJSON(&body); err != nil {
