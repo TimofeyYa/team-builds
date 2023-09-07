@@ -113,6 +113,19 @@ func (a *AuthService) Authorization(c context.Context, tokens *models.TokenPair)
 	}, nil
 }
 
+func (a *AuthService) ValidateToken(c context.Context, token string) *httpParcer.ErrorHTTP {
+	_, err := a.parseJWT(token)
+
+	if err != nil {
+		return &httpParcer.ErrorHTTP{
+			Msg:  err.Error(),
+			Code: 403,
+		}
+	}
+
+	return nil
+}
+
 func (a *AuthService) generateHash(str string) string {
 	h := sha1.New()
 	h.Write([]byte(str))

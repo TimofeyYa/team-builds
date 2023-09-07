@@ -25,10 +25,10 @@ func (h *Handler) SetRouter(router *gin.Engine) {
 		{
 			auth.POST("/login", httpparcer.Parce(h.Login))
 			auth.POST("/registration", httpparcer.Parce(h.Registration))
-			auth.POST("/authorization", h.Authorization)
+			auth.PUT("/authorization", h.Authorization)
 		}
 
-		user := v1.Group("/user")
+		user := v1.Group("/user", h.validateJWT)
 		{
 			// Get information about user
 			user.GET("/:user_id")

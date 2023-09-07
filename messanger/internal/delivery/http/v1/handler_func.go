@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"errors"
 	"strings"
 	"teamBuild/messages/internal/models"
 	httpParcer "teamBuilds/libs/http_parcer"
@@ -49,19 +50,12 @@ func (h *Handler) Registration(c *gin.Context, regData models.RegistrationUser) 
 // Интерфейс обращается на роут когда токен, который он содержит, истекает по времени
 // Тогда он делает запрос на обновление токена
 func (h *Handler) Authorization(c *gin.Context) {
-	tokenHeader := c.GetHeader("Authorization")
-	if len(tokenHeader) == 0 {
-		h.errorResponse(c, 401, "Empty Authorization header")
-		return
-	}
-	tokenParts := strings.Split(tokenHeader, " ")
-	if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
-		h.errorResponse(c, 401, "Invalid Authorization header")
-	}
-
 	tokens := models.TokenPair{}
-	tokens.JWT = tokenParts[1]
-
+	jwt, err := h.getJWTFromHeader(c)
+	if err != nil {
+		h.errorResponse(c, 401, err.Error())
+	}
+	tokens.JWT = jwt
 	refreshToken, err := c.Cookie("refresh_token")
 	if err != nil {
 		h.errorResponse(c, 401, err.Error())
@@ -80,4 +74,34 @@ func (h *Handler) Authorization(c *gin.Context) {
 		"status": true,
 		"token":  newTokens.JWT,
 	})
+}
+
+func (h *Handler) validateJWT(c *gin.Context) {
+	jwt, err := h.getJWTFromHeader(c)
+	if err != nil {
+		h.errorResponse(c, 401, err.Error())
+		return
+	}
+
+	httpErr := h.service.ValidateToken(c, jwt)
+	if err != nil {
+		h.errorResponse(c, httpErr.Code, httpErr.Msg)
+		return
+	}
+	c.JSON(200, gin.H{
+		"status": true,
+	})
+}
+
+func (h *Handler) getJWTFromHeader(c *gin.Context) (string, error) {
+	tokenHeader := c.GetHeader("Authorization")
+	if len(tokenHeader) == 0 {
+		return "", errors.New("empty Authorization header")
+	}
+	tokenParts := strings.Split(tokenHeader, " ")
+	if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
+		return "", errors.New("invalid Authorization header")
+	}
+
+	return tokenParts[1], nil
 }
