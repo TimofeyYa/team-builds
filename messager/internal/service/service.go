@@ -15,6 +15,9 @@ type Auth interface {
 }
 
 type User interface {
+	GetUserInfo(context.Context, int) (*models.User, error)
+	GetUserFriends(c context.Context, userId int, limit int, offset int) ([]models.User, error)
+	GetUserFriends(c context.Context, userId int, limit int, offset int) ([]models.User, error)
 }
 
 type Service struct {
