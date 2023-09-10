@@ -5,7 +5,6 @@ import (
 	httpparcer "teamBuilds/libs/http_parcer"
 
 	"github.com/gin-gonic/gin"
-	"github.com/gorilla/websocket"
 )
 
 type Handler struct {
@@ -45,28 +44,14 @@ func (h *Handler) SetRouter(router *gin.Engine) {
 			// Get user chats (only for user)
 			user.GET("/:user_id/chats")
 
-			// Web Socket Chanal for messages (only for user)
-			user.GET("/:user_id/chats/ws", CreateChatConnection(h.MessageChanal))
+			// Web Socket Chanal for messages (only for user) (Read, Delete, Create, Update)
+			wsHandler := NewWSHandler(h.service)
+			// TODO: Cделать проверку на то, что пользователь можем писать в канал если его JWT и USER ID совпадают
+			user.GET("/:user_id/chats/ws", wsHandler.MessageChanal)
 
 			// Get user chat with recipient  (only for user)
 			user.GET("/:user_id/chats/:recipient_id")
-
-			// Delete user chat with recipient  (only for user)
-			user.DELETE("/:user_id/chats/:recipient_id")
-
-			// Create message for chat  (only for user)
-			user.POST("/:user_id/chats/:recipient_id")
-
-			// Update message for chat  (only for user)
-			user.PATCH("/:user_id/chats/:recipient_id/:message_id")
 		}
-	}
-}
-
-func CreateChatConnection(f func(*gin.Context, map[int]*websocket.Conn)) func(*gin.Context) {
-	userData := map[int]*websocket.Conn{}
-	return func(c *gin.Context) {
-		f(c, userData)
 	}
 }
 

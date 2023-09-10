@@ -88,9 +88,6 @@ func (h *Handler) validateJWT(c *gin.Context) {
 		h.errorResponse(c, httpErr.Code, httpErr.Msg)
 		return
 	}
-	c.JSON(200, gin.H{
-		"status": true,
-	})
 }
 
 func (h *Handler) getJWTFromHeader(c *gin.Context) (string, error) {

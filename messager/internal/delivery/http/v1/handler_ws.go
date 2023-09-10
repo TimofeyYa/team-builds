@@ -2,9 +2,8 @@ package v1
 
 import (
 	"encoding/json"
-	"fmt"
-	"net/http"
 	"sync"
+	"teamBuild/messages/internal/service"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -17,29 +16,36 @@ var wsupgrader = websocket.Upgrader{
 }
 
 type userMessage struct {
-	Msg         string `json:"msg"`
-	RecipientId int    `json:"recipient_id"`
+	MsgType     string  `json:"msg_type" binding:"required"`
+	RecipientId int     `json:"recipient_id" binding:"required"`
+	Msg         *string `json:"msg"`    // Нужен для создания и обновления
+	MsgId       *int    `json:"msg_id"` // Нужен для удаления и обновления
 }
 
 var mu sync.Mutex // Объявляет мьютекс
 
-func wshandler(w http.ResponseWriter, r *http.Request, userId int, userData map[int]*websocket.Conn) {
-	conn, err := wsupgrader.Upgrade(w, r, nil)
-	if err != nil {
-		logrus.Warnf("Failed to set websocket upgrade: %+v\n", err)
-		return
+type WSHandler struct {
+	service         *service.Service
+	userConnections map[int]*websocket.Conn
+}
+
+func NewWSHandler(service *service.Service) *WSHandler {
+	userConnections := map[int]*websocket.Conn{}
+	return &WSHandler{
+		userConnections: userConnections,
+		service:         service,
 	}
+}
 
+func (wsh *WSHandler) wshandler(conn *websocket.Conn, userId int) {
 	mu.Lock()
-	userData[userId] = conn
+	wsh.userConnections[userId] = conn
 	mu.Unlock()
-
 	for {
 		t, msg, err := conn.ReadMessage()
 		if err != nil {
 			mu.Lock()
-			delete(userData, userId)
-			fmt.Println(userData)
+			delete(wsh.userConnections, userId)
 			mu.Unlock()
 			break
 		}
@@ -50,24 +56,46 @@ func wshandler(w http.ResponseWriter, r *http.Request, userId int, userData map[
 			continue
 		}
 
+		switch userMsg.MsgType {
+		case "read":
+		case "create":
+		case "delete":
+		case "update":
+		default:
+			{
+				conn.WriteMessage(t, []byte("Не валидный тип сообщения"))
+				continue
+			}
+		}
+
 		mu.Lock()
-		if userData[userMsg.RecipientId] != nil {
-			userData[userMsg.RecipientId].WriteMessage(t, msg)
+		if wsh.userConnections[userMsg.RecipientId] != nil {
+			wsh.userConnections[userMsg.RecipientId].WriteMessage(t, msg)
 		}
 		mu.Unlock()
 	}
-	conn.Close()
 }
 
 type messageRequest struct {
 	UserId int `uri:"user_id"`
 }
 
-func (h *Handler) MessageChanal(c *gin.Context, userData map[int]*websocket.Conn) {
+func (wsh *WSHandler) MessageChanal(c *gin.Context) {
 	var messReq messageRequest
 	if err := c.ShouldBindUri(&messReq); err != nil {
 		c.AbortWithStatusJSON(400, gin.H{"status": false, "message": "user id is required"})
 		return
 	}
-	wshandler(c.Writer, c.Request, messReq.UserId, userData)
+
+	conn, err := wsupgrader.Upgrade(c.Writer, c.Request, nil)
+	if err != nil {
+		logrus.Warnf("Failed to set websocket upgrade: %+v\n", err)
+		return
+	}
+
+	wsh.wshandler(conn, messReq.UserId)
+
+	if err := conn.Close(); err != nil {
+		logrus.Errorf("Failed to close websocket connect: %+v\n", err)
+	}
 }

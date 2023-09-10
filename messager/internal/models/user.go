@@ -18,3 +18,19 @@ type RegistrationUser struct {
 	Email    string
 	Password string
 }
+
+type Message struct {
+	SenderId    int
+	RecipientId int
+	Content     string
+	IsRead      bool
+	UpdateAt    *time.Time `db:"update_at" json:"update_at"`
+	CreateAt    time.Time  `db:"create_at" json:"create_at"`
+}
+
+type Chat struct {
+	RecipientId        int
+	RecipientName      string
+	CountUnreadMessage uint16
+	LastMessage        Message
+}

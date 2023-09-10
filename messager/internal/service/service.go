@@ -15,9 +15,16 @@ type Auth interface {
 }
 
 type User interface {
-	GetUserInfo(context.Context, int) (*models.User, error)
-	GetUserFriends(c context.Context, userId int, limit int, offset int) ([]models.User, error)
-	GetUserFriends(c context.Context, userId int, limit int, offset int) ([]models.User, error)
+	GetUserInfo(context.Context, int) (*models.User, *httpParcer.ErrorHTTP)
+	GetUserFriends(c context.Context, userId int, limit int, offset int) ([]models.User, *httpParcer.ErrorHTTP)
+	CreateUserFriend(c context.Context, userId int, friendId int) *httpParcer.ErrorHTTP
+	DeleteUserFriend(c context.Context, userId int, friendId int) *httpParcer.ErrorHTTP
+	GetUserChats(c context.Context, userId int) ([]models.Chat, *httpParcer.ErrorHTTP)
+	CreateMessage(c context.Context, userId int, recipientId int, msg models.Message) *httpParcer.ErrorHTTP
+	UpdateMessage(c context.Context, userId int, messageId int, msg models.Message) *httpParcer.ErrorHTTP
+	DeleteMessage(c context.Context, userId int, messageId int) *httpParcer.ErrorHTTP
+	ReadMessages(c context.Context, userId int, recipientId int) *httpParcer.ErrorHTTP
+	GetChatMessages(c context.Context, userId int, recipientId int) ([]models.Message, *httpParcer.ErrorHTTP)
 }
 
 type Service struct {
