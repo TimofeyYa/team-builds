@@ -1,6 +1,7 @@
 package v1
 
 import (
+	"context"
 	"encoding/json"
 	"sync"
 	"teamBuild/messages/internal/service"
@@ -15,11 +16,12 @@ var wsupgrader = websocket.Upgrader{
 	WriteBufferSize: 1024,
 }
 
+// TODO: Добавить время отправления сразу в сообщение
 type userMessage struct {
-	MsgType     string  `json:"msg_type" binding:"required"`
-	RecipientId int     `json:"recipient_id" binding:"required"`
-	Msg         *string `json:"msg"`    // Нужен для создания и обновления
-	MsgId       *int    `json:"msg_id"` // Нужен для удаления и обновления
+	MsgType     string `json:"msg_type" binding:"required"`
+	RecipientId int    `json:"recipient_id" binding:"required"`
+	Msg         string `json:"msg"`    // Нужен для создания и обновления
+	MsgId       int    `json:"msg_id"` // Нужен для удаления и обновления
 }
 
 var mu sync.Mutex // Объявляет мьютекс
@@ -37,7 +39,7 @@ func NewWSHandler(service *service.Service) *WSHandler {
 	}
 }
 
-func (wsh *WSHandler) wshandler(conn *websocket.Conn, userId int) {
+func (wsh *WSHandler) wshandler(c context.Context, conn *websocket.Conn, userId int) {
 	mu.Lock()
 	wsh.userConnections[userId] = conn
 	mu.Unlock()
@@ -58,7 +60,13 @@ func (wsh *WSHandler) wshandler(conn *websocket.Conn, userId int) {
 
 		switch userMsg.MsgType {
 		case "read":
+			{
+				wsh.service.ReadMessages(c, userId, userMsg.RecipientId)
+			}
 		case "create":
+			{
+				wsh.service.CreateMessage(c, userId, userMsg.RecipientId, userMsg.Msg)
+			}
 		case "delete":
 		case "update":
 		default:
@@ -93,7 +101,7 @@ func (wsh *WSHandler) MessageChanal(c *gin.Context) {
 		return
 	}
 
-	wsh.wshandler(conn, messReq.UserId)
+	wsh.wshandler(c, conn, messReq.UserId)
 
 	if err := conn.Close(); err != nil {
 		logrus.Errorf("Failed to close websocket connect: %+v\n", err)

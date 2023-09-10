@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"teamBuild/messages/internal/models"
 	"teamBuild/messages/internal/repository"
 	httpParcer "teamBuilds/libs/http_parcer"
@@ -11,8 +12,8 @@ type UserService struct {
 	repo *repository.Repository
 }
 
-func NewUserService(repo *repository.Repository) *AuthService {
-	return &AuthService{
+func NewUserService(repo *repository.Repository) *UserService {
+	return &UserService{
 		repo: repo,
 	}
 }
@@ -32,7 +33,8 @@ func (u *UserService) DeleteUserFriend(c context.Context, userId int, friendId i
 func (u *UserService) GetUserChats(c context.Context, userId int) ([]models.Chat, *httpParcer.ErrorHTTP) {
 	return nil, nil
 }
-func (u *UserService) CreateMessage(c context.Context, userId int, recipientId int, msg models.Message) *httpParcer.ErrorHTTP {
+func (u *UserService) CreateMessage(c context.Context, userId int, recipientId int, msg string) *httpParcer.ErrorHTTP {
+	fmt.Println("Создаю сообщение")
 	return nil
 }
 func (u *UserService) UpdateMessage(c context.Context, userId int, messageId int, msg models.Message) *httpParcer.ErrorHTTP {

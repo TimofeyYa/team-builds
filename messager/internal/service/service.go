@@ -20,7 +20,7 @@ type User interface {
 	CreateUserFriend(c context.Context, userId int, friendId int) *httpParcer.ErrorHTTP
 	DeleteUserFriend(c context.Context, userId int, friendId int) *httpParcer.ErrorHTTP
 	GetUserChats(c context.Context, userId int) ([]models.Chat, *httpParcer.ErrorHTTP)
-	CreateMessage(c context.Context, userId int, recipientId int, msg models.Message) *httpParcer.ErrorHTTP
+	CreateMessage(c context.Context, userId int, recipientId int, msg string) *httpParcer.ErrorHTTP
 	UpdateMessage(c context.Context, userId int, messageId int, msg models.Message) *httpParcer.ErrorHTTP
 	DeleteMessage(c context.Context, userId int, messageId int) *httpParcer.ErrorHTTP
 	ReadMessages(c context.Context, userId int, recipientId int) *httpParcer.ErrorHTTP
@@ -35,5 +35,6 @@ type Service struct {
 func NewService(repo *repository.Repository) *Service {
 	return &Service{
 		Auth: NewAuthService(repo),
+		User: NewUserService(repo),
 	}
 }
