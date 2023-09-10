@@ -13,6 +13,7 @@ type Store interface {
 	LoginUser(context.Context, models.Credentials) (int, error)
 	SaveRefreshToken(context.Context, int, string) error
 	UpdateRefreshToken(context.Context, int, string, string) error
+	CreateMessage(context.Context, *models.Message) (int, error)
 }
 
 type Repository struct {

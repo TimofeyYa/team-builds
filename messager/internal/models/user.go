@@ -20,6 +20,7 @@ type RegistrationUser struct {
 }
 
 type Message struct {
+	Id          int
 	SenderId    int
 	RecipientId int
 	Content     string

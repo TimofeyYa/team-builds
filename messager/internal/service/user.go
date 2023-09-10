@@ -2,10 +2,10 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"teamBuild/messages/internal/models"
 	"teamBuild/messages/internal/repository"
 	httpParcer "teamBuilds/libs/http_parcer"
+	"time"
 )
 
 type UserService struct {
@@ -33,9 +33,23 @@ func (u *UserService) DeleteUserFriend(c context.Context, userId int, friendId i
 func (u *UserService) GetUserChats(c context.Context, userId int) ([]models.Chat, *httpParcer.ErrorHTTP) {
 	return nil, nil
 }
-func (u *UserService) CreateMessage(c context.Context, userId int, recipientId int, msg string) *httpParcer.ErrorHTTP {
-	fmt.Println("Создаю сообщение")
-	return nil
+func (u *UserService) CreateMessage(c context.Context, userId int, recipientId int, msg string) (*models.Message, *httpParcer.ErrorHTTP) {
+	msgItem := models.Message{
+		Content:     msg,
+		SenderId:    userId,
+		RecipientId: recipientId,
+		IsRead:      false,
+		CreateAt:    time.Now(),
+	}
+	messageId, err := u.repo.CreateMessage(c, &msgItem)
+	if err != nil {
+		return nil, &httpParcer.ErrorHTTP{
+			Code: 500,
+			Msg:  "Create message err",
+		}
+	}
+	msgItem.Id = messageId
+	return &msgItem, nil
 }
 func (u *UserService) UpdateMessage(c context.Context, userId int, messageId int, msg models.Message) *httpParcer.ErrorHTTP {
 	return nil

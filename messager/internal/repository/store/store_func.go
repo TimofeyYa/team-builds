@@ -150,3 +150,24 @@ func (s *StoreRepository) UpdateRefreshToken(c context.Context, userId int, oldR
 
 	return nil
 }
+
+func (s *StoreRepository) CreateMessage(c context.Context, msg *models.Message) (int, error) {
+	sqlReq, args, err := psql.Insert("messages").
+		Columns("sendler_id", "recipient_id", "message", "is_read", "created_at").
+		Values(msg.SenderId, msg.RecipientId, msg.Content, msg.IsRead, msg.CreateAt).
+		Suffix("RETURNING \"id\"").ToSql()
+	if err != nil {
+		logrus.Error(err.Error())
+		return 0, fmt.Errorf("error build query: %s", err.Error())
+	}
+
+	var messageId int
+	if err := s.pool.QueryRow(c, sqlReq, args...).Scan(&messageId); err != nil {
+		if err != nil {
+			logrus.Error(err.Error())
+			return 0, fmt.Errorf("error exec query: %s", err.Error())
+		}
+	}
+
+	return messageId, nil
+}

@@ -65,7 +65,22 @@ func (wsh *WSHandler) wshandler(c context.Context, conn *websocket.Conn, userId 
 			}
 		case "create":
 			{
-				wsh.service.CreateMessage(c, userId, userMsg.RecipientId, userMsg.Msg)
+				messageItem, httpErr := wsh.service.CreateMessage(c, userId, userMsg.RecipientId, userMsg.Msg)
+				if httpErr != nil {
+					conn.WriteMessage(t, []byte("Не валидный тип сообщения"))
+					continue
+				}
+
+				messageBytes, err := json.Marshal(messageItem)
+				if err != nil {
+					conn.WriteMessage(t, []byte("Внутреняя ошибка"))
+					continue
+				}
+				mu.Lock()
+				if wsh.userConnections[userMsg.RecipientId] != nil {
+					wsh.userConnections[userMsg.RecipientId].WriteMessage(t, messageBytes)
+				}
+				mu.Unlock()
 			}
 		case "delete":
 		case "update":
@@ -76,11 +91,6 @@ func (wsh *WSHandler) wshandler(c context.Context, conn *websocket.Conn, userId 
 			}
 		}
 
-		mu.Lock()
-		if wsh.userConnections[userMsg.RecipientId] != nil {
-			wsh.userConnections[userMsg.RecipientId].WriteMessage(t, msg)
-		}
-		mu.Unlock()
 	}
 }
 
